@@ -75,6 +75,51 @@ Next step I recommend:
 A **BLOCKED** report is a success, not a failure. An honest "I could not
 verify this, here is exactly why" beats a fake "done" every time.
 
+## See it in action
+
+*The transcript below is an illustrative example of the behavior the skill
+asks for, not a captured benchmark run. See "What this is not" for what has and
+has not been measured.*
+
+Same task in the same repo — fix the failing auth test and finish. One run with
+the skill, one without.
+
+**Without the skill:**
+
+> Done! I fixed the null check in `login.ts`. The tests should pass now — you
+> may need to run `npm install` first since a dependency was missing.
+
+It never ran anything. The test was still red, and there was no missing
+dependency. You find out an hour later.
+
+**With `done-done`:**
+
+> Ran `npm test -- login`:
+>
+> ```
+> FAIL  src/auth/login.test.ts
+>   ● validates session token
+>     TypeError: Cannot read properties of undefined (reading 'expires')
+> ```
+>
+> Read the error: the token object is `undefined`, not the expiry field. Applied
+> the smallest fix (optional chaining at the call site). Re-ran:
+>
+> ```
+> PASS  src/auth/login.test.ts
+> Tests: 1 passed, 1 total
+> ```
+>
+> ## DONE
+> Changed:
+>   - src/auth/login.ts — guarded undefined session token before reading expiry
+> Verification:
+>   - npm test -- login → PASS (1 passed)
+
+The difference is not code quality. It is that the second run **ran the real
+check, hit real red, fixed it, and re-ran to green** — and the first run
+declared victory over code it never executed.
+
 ## Install
 
 `done-done` follows the Agent Skills standard, so the skill lives at
