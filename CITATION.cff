@@ -1,0 +1,20 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "done-done: an Agent Skill that forces verification before a coding agent claims done"
+type: software
+authors:
+  - name: "Reim-developer"
+    website: "https://github.com/Reim-developer"
+repository-code: "https://github.com/Reim-developer/done-done"
+url: "https://github.com/Reim-developer/done-done"
+license: MIT
+keywords:
+  - agent-skills
+  - coding-agent
+  - verification
+  - definition-of-done
+abstract: >-
+  done-done is a prose-only Agent Skill that puts a hard gate between "I wrote
+  code" and "I say done." It requires a coding agent to detect the project's
+  real verification commands, run them, show the raw output, and either report
+  DONE with evidence or an honest BLOCKED report. It ships no runtime code.

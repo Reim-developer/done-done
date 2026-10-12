@@ -77,33 +77,49 @@ verify this, here is exactly why" beats a fake "done" every time.
 
 ## Install
 
-### Claude Code
+`done-done` follows the Agent Skills standard, so the skill lives at
+`skills/done-done/SKILL.md` and installs with the standard tooling.
+
+### Any agent (recommended)
 
 ```bash
-# from a clone of this repo
-mkdir -p ~/.claude/skills/done-done
-cp -r SKILL.md references ~/.claude/skills/done-done/
+npx skills add Reim-developer/done-done
 ```
 
-Or add it to a project for one repo only:
+This detects your installed agents (Claude Code, Codex, Cursor, OpenCode,
+Gemini CLI, and 30+ more) and links the skill into each one. Add `-g` to make
+it global instead of project-scoped.
+
+List what a repo contains without installing:
 
 ```bash
-mkdir -p .claude/skills/done-done
-cp -r SKILL.md references .claude/skills/done-done/
+npx skills add Reim-developer/done-done --list
 ```
 
-### Any agent via the skills CLI
+### Claude Code (plugin marketplace)
+
+If you prefer the plugin route, add this repo as a plugin:
+
+```
+/plugin marketplace add Reim-developer/done-done
+/plugin install done-done@done-done
+```
+
+Or manually copy the skill directory:
 
 ```bash
-npx skills add <your-github-username>/done-done
+# global
+cp -r skills/done-done ~/.claude/skills/
+# or project-local
+cp -r skills/done-done .claude/skills/
 ```
 
 ### Manual (any Agent-Skills-compatible agent)
 
-Copy `SKILL.md` (and optionally `references/`, `scripts/`) into your agent's
-skills directory. Point the agent at it, or let it auto-load on task
-completion. Codex / OpenCode / Gemini CLI / Cursor all read a `SKILL.md` from
-their configured skills path.
+Copy the `skills/done-done/` folder — `SKILL.md` plus its `references/` — into
+your agent's skills directory (`~/.claude/skills/`, `~/.codex/skills/`,
+`~/.cursor/skills/`, `~/.config/opencode/skills/`, etc.). Point the agent at
+it, or let it auto-load on task completion.
 
 ## Why this works
 
@@ -111,11 +127,76 @@ their configured skills path.
   and the behavior changes on the next task.
 - **It is instantly felt.** The first time the agent refuses to say "done"
   without a green run, you see the difference.
-- **It is cross-platform.** The protocol is shell-agnostic; the helper ships
-  for both bash and PowerShell.
+- **It is cross-platform and language-agnostic.** The protocol is pure
+  prose — it tells the agent to run whatever the *project* declares, so it
+  works for JS, Python, Rust, Go, and anything else without shipping
+  language-specific glue.
 - **It does not try to write better code.** It fixes the one thing that wastes
   your time: *lying about whether the code works.* Pair it with your normal
   quality skills; this is the gate at the end.
+
+## What this is not
+
+Being upfront, because this is a skill and skills are easy to oversell:
+
+- **It is not a benchmarked, evaluated skill.** I have not run a blind A/B
+  study and I am not going to invent one. If you want proof-of-effect numbers,
+  this repo does not have them yet, and you should weight it accordingly.
+- **It does not make the model smarter.** It is prose that changes *behavior*,
+  not capability. A weak model can still write code that fails; the skill just
+  makes it say so instead of claiming victory.
+- **It cannot force anything.** Skills are context, not a sandbox. A model
+  under strong pressure (or a user who keeps saying "just ship it") can ignore
+  it. Think of it as a strong default, not a guarantee.
+- **It will not fix a project with no verification to run.** If there is no
+  test, lint, typecheck, or build, the skill makes the agent say "I could not
+  verify" — not magically produce correctness.
+
+If any of that is a dealbreaker, that is a fair reason to pass.
+
+## How this repo verifies itself
+
+A skill that preaches "verify before claiming done" should not ship unverified.
+This repo runs its own protocol on itself:
+
+- **CI** (`.github/workflows/ci.yml`) lints the Markdown and validates every
+  `SKILL.md` has the required frontmatter (`name`, `description`).
+- **`tests/`** holds that validation so it runs locally, not just in CI:
+
+  ```bash
+  python tests/validate.py
+  ```
+
+There is no test suite for the *behavior* (see "What this is not"), but the
+packaging is checked — so the install command and the skill file cannot silently
+break.
+
+## Repo structure
+
+```
+done-done/
+├── skills/
+│   └── done-done/
+│       ├── SKILL.md                  <- the skill (the product)
+│       └── references/
+│           └── verification.md       <- per-language "how to detect checks"
+├── .claude-plugin/
+│   └── plugin.json                   <- Claude Code plugin manifest
+├── .github/
+│   └── workflows/
+│       └── ci.yml                    <- lint + skill validation
+├── tests/
+│   └── validate.py                   <- runs the same checks as CI
+├── AGENTS.md
+├── CHANGELOG.md
+├── CODE_OF_CONDUCT.md
+├── CONTRIBUTING.md
+├── SECURITY.md
+├── CITATION.cff
+├── llms.txt
+├── LICENSE
+└── README.md
+```
 
 ## Who it is for
 

@@ -1,0 +1,43 @@
+# done-done
+
+> Stop coding agents from lying about "done."
+
+done-done is a prose-only Agent Skill for AI coding agents (Claude Code, Codex,
+Cursor, OpenCode, Gemini CLI, and anything reading the Agent Skills standard).
+
+## What it does
+
+Before a coding agent may declare a task "done", "complete", or "should work",
+this skill forces a four-step protocol:
+
+1. Detect the project's real verification commands (package.json scripts,
+   pyproject.toml, Cargo.toml, go.mod, Makefile, or mirror CI). Never invent an
+   easier command.
+2. Actually run them.
+3. Show the evidence: the exact command plus its real output. Banned phrases
+   that no longer count as done include "should work", "you may need to
+   install X", and "works on my machine".
+4. On failure, fix and re-run (bounded, 3 attempts per error class), then emit
+   either a DONE report backed by output or an honest BLOCKED report with the
+   verbatim error and a recommended next step.
+
+## Install
+
+    npx skills add Reim-developer/done-done
+
+Skill path: skills/done-done/SKILL.md
+
+## Key files
+
+- skills/done-done/SKILL.md — the skill itself
+- skills/done-done/references/verification.md — per-language detection table
+
+## Limitations
+
+- No benchmark or blind A/B evaluation is shipped. Behavior changes, not model
+  capability.
+- Skills are strong defaults, not enforcement. A model can still ignore them.
+
+## License
+
+MIT
