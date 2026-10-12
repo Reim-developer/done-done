@@ -157,19 +157,29 @@ If any of that is a dealbreaker, that is a fair reason to pass.
 ## How this repo verifies itself
 
 A skill that preaches "verify before claiming done" should not ship unverified.
-This repo runs its own protocol on itself:
+Testing a *prose* skill honestly takes two different layers, and this repo keeps
+them separate on purpose:
 
-- **CI** (`.github/workflows/ci.yml`) lints the Markdown and validates every
-  `SKILL.md` has the required frontmatter (`name`, `description`).
-- **`tests/`** holds that validation so it runs locally, not just in CI:
+**1. Deterministic checks (run in CI on every push).** The product is text, so
+the test asserts the text keeps its promises. Two scripts in `tests/`:
 
-  ```bash
-  python tests/validate.py
-  ```
+```bash
+python tests/validate.py       # packaging: standard path, frontmatter, links resolve
+python tests/test_contract.py  # contract: 4 steps in order, DONE+BLOCKED, banned phrases, bounded loop
+```
 
-There is no test suite for the *behavior* (see "What this is not"), but the
-packaging is checked — so the install command and the skill file cannot silently
-break.
+`test_contract.py` is a real regression guard, not a format linter. Delete the
+BLOCKED report, drop a banned phrase, break the step order, or gash the
+reference link, and CI goes red. It was checked against 6 deliberate mutations
+of the skill; it catches the ones that break a promise.
+
+**2. Behavioral eval (runs locally before a release, never in CI).** Whether an
+agent *with* the skill actually verifies more than one *without* it needs a live
+model, costs money, and is nondeterministic — so it does not belong in the
+per-push pipeline. The eval cases and assertions live in `evals/`, run with
+Anthropic's skill-creator framework, and are documented (including how to grade
+them) in [`evals/README.md`](evals/README.md). **This repo ships no benchmark
+numbers**, because none have been measured and disclosed. See "What this is not".
 
 ## Repo structure
 

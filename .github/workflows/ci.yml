@@ -7,7 +7,7 @@ on:
 
 jobs:
   verify:
-    name: Lint + validate skill
+    name: Validate skill package
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -17,21 +17,36 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Validate skill frontmatter and structure
+      # Layer 1a - packaging: the skill is at the Agent-Skills-standard path,
+      # frontmatter is valid, referenced files resolve.
+      - name: Validate skill package
         run: python tests/validate.py
 
-      - name: Check Markdown files parse
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-          bad = []
-          for md in Path(".").rglob("*.md"):
-              text = md.read_text(encoding="utf-8")
-              if text.count("```") % 2 != 0:
-                  bad.append(f"{md}: unbalanced code fences")
-          if bad:
-              print("Markdown problems:")
-              print("\n".join(bad))
-              raise SystemExit(1)
-          print("Markdown OK")
-          PY
+      # Layer 1b - contract: the SKILL.md still keeps every structural promise
+      # the repo makes about it (four steps in order, DONE + BLOCKED reports,
+      # banned phrases, bounded fix loop, reference link). Guards the product
+      # itself against a bad edit, not markdown formatting.
+      - name: Test skill contract
+        run: python tests/test_contract.py
+
+  typecheck:
+    name: Typecheck test harness
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install pyright
+        run: npm install -g pyright
+
+      - name: Pyright strict on tests
+        run: pyright
+
+# Layer 2 (behavioral eval) is intentionally NOT here. Running an agent with
+# vs without the skill requires a live model, costs money, and is
+# nondeterministic - so it runs locally before a release, not on every push.
+# See evals/README.md.

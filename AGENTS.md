@@ -23,16 +23,23 @@ prose.
 
 ## Verifying a change
 
-Run the same checks CI runs:
+Run the same deterministic checks CI runs:
 
 ```bash
-python tests/validate.py
+python tests/validate.py     # packaging: standard path, frontmatter, links
+python tests/test_contract.py  # contract: SKILL.md keeps every promise
+pyright                      # typecheck the test harness (strict)
 ```
 
-It validates the skill is at the standard path, has valid frontmatter
-(`name` matching the directory + a `description`), and that any referenced
-`references/*.md` files exist. There is no behavioral test suite — see the
-"What this is not" section of the README. Do not invent one.
+- `validate.py` confirms the skill is at the standard path, has valid
+  frontmatter, and referenced `references/*.md` files resolve.
+- `test_contract.py` is the regression guard on the product itself: it fails if
+  an edit drops the four in-order steps, the DONE+BLOCKED reports, the banned
+  phrases, the bounded fix loop, or the reference link.
+
+These are deterministic (no model, no network). The deeper behavioral eval --
+does an agent WITH the skill actually verify, vs WITHOUT it -- needs a live
+model and runs locally before a release, not in CI. See `evals/README.md`.
 
 ## Editing the skill
 

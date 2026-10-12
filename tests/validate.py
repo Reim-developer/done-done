@@ -32,22 +32,25 @@ def parse_frontmatter(text: str) -> dict[str, str] | None:
     parts = text.split("---", 2)
     if len(parts) < 3:
         return None
-    fm = {}
-    key = None
+    fm: dict[str, str] = {}
+    key: str | None = None
     for line in parts[1].splitlines():
         if not line.strip():
             continue
         # Continuation of a folded/multiline value ('>-', '|-', indented lines).
-        if line[0].isspace() and key:
+        if line[0].isspace() and key is not None:
             fm[key] = (fm[key] + " " + line.strip()).strip()
             continue
         m = re.match(r"^([A-Za-z0-9_-]+):\s*(.*)$", line)
-        if not m:
+        if m is None:
             continue
-        key, val = m.group(1), m.group(2).strip()
+        # k is a fresh str, so fm[k] is unambiguously typed.
+        k: str = m.group(1)
+        val: str = m.group(2).strip()
         # Strip YAML folded/literal block indicators like '>-' or '|'.
         val = re.sub(r"[|>][+-]?$", "", val).strip()
-        fm[key] = val
+        key = k
+        fm[k] = val
     return fm
 
 
