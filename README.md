@@ -196,8 +196,8 @@ it, or let it auto-load on task completion.
 
 ## Why this works
 
-- **It is one file of Markdown.** No model, no API, no infrastructure. Load it
-  and the behavior changes on the next task.
+- **It is one file of Markdown.** Drop it in your skills directory and it
+  applies to the next task.
 - **It is instantly felt.** The first time the agent refuses to say "done"
   without a green run, you see the difference.
 - **It is cross-platform and language-agnostic.** The protocol is pure
