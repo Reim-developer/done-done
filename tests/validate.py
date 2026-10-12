@@ -9,15 +9,19 @@ unverified. This runs the same checks locally and in CI:
   3. Frontmatter declares a non-empty `name` and `description`.
   4. `name` matches the skill directory name.
   5. Referenced local files (references/*.md) actually exist.
+  6. The per-harness plugin manifests (.claude-plugin, .codex-plugin,
+     .cursor-plugin) parse as JSON and are internally consistent.
 
 Run:  python tests/validate.py
 Exit 0 = valid, non-zero = invalid.
 """
 from __future__ import annotations
 
+import json
 import re
 import sys
 from pathlib import Path
+from typing import Any, cast
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 SKILL_DIR = REPO_ROOT / "skills" / "done-done"
@@ -91,8 +95,87 @@ def main() -> int:
         if not (SKILL_DIR / ref).is_file():
             errors.append(f"SKILL.md references missing file: {ref}")
 
+    # 6. Per-harness plugin manifests parse and are self-consistent
+    errors.extend(_validate_manifests())
+
     print(_report(errors))
     return 1 if errors else 0
+
+
+def _validate_manifests() -> list[str]:
+    """Parse the plugin manifests and check they point at the real skill dir.
+
+    These are what make `/plugin install` and the Codex/Cursor plugin paths
+    work. A malformed manifest breaks the advertised install command, so CI
+    checks it rather than trusting it.
+    """
+    errs: list[str] = []
+
+    # Claude Code: .claude-plugin/plugin.json + marketplace.json (source "./")
+    claude = _load_json(REPO_ROOT / ".claude-plugin" / "plugin.json", errs)
+    if claude is not None:
+        _check_name(claude, "done-done", ".claude-plugin/plugin.json", errs)
+    marketplace = _load_json(
+        REPO_ROOT / ".claude-plugin" / "marketplace.json", errs
+    )
+    if marketplace is not None:
+        # The README advertises `/plugin install done-done@done-done`; the
+        # suffix after @ is this marketplace name, so it must match too.
+        _check_name(marketplace, "done-done", ".claude-plugin/marketplace.json", errs)
+        plugins: Any = marketplace.get("plugins")
+        if not isinstance(plugins, list) or not plugins:
+            errs.append(
+                ".claude-plugin/marketplace.json: 'plugins' must be a "
+                "non-empty list"
+            )
+        else:
+            # Cast before indexing so the element is Any, not list[Unknown].
+            items = cast("list[Any]", plugins)
+            entry: Any = items[0]
+            source: Any = None
+            if isinstance(entry, dict):
+                source = cast("dict[str, Any]", entry).get("source")
+            if source != "./":
+                errs.append(
+                    ".claude-plugin/marketplace.json: plugins[0].source "
+                    'must be "./" (repo is its own marketplace)'
+                )
+
+    # Codex and Cursor: .<harness>-plugin/plugin.json with "skills": "./skills/"
+    for harness in ("codex", "cursor"):
+        manifest_path = f".{harness}-plugin/plugin.json"
+        data = _load_json(REPO_ROOT / f".{harness}-plugin" / "plugin.json", errs)
+        if data is not None:
+            _check_name(data, "done-done", manifest_path, errs)
+            if data.get("skills") != "./skills/":
+                errs.append(f'{manifest_path}: "skills" must be "./skills/"')
+
+    return errs
+
+
+def _load_json(path: Path, errs: list[str]) -> dict[str, Any] | None:
+    """Load a JSON object; append to errs and return None on any problem."""
+    rel = path.relative_to(REPO_ROOT)
+    if not path.is_file():
+        errs.append(f"missing manifest: {rel}")
+        return None
+    try:
+        data: Any = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        errs.append(f"{rel}: invalid JSON ({exc.msg})")
+        return None
+    if not isinstance(data, dict):
+        errs.append(f"{rel}: top level must be a JSON object")
+        return None
+    return cast(dict[str, Any], data)
+
+
+def _check_name(
+    data: dict[str, Any], expected: str, rel: str, errs: list[str]
+) -> None:
+    """Assert the manifest's name field matches the plugin name."""
+    if data.get("name") != expected:
+        errs.append(f'{rel}: "name" must be "{expected}"')
 
 
 def _report(errors: list[str]) -> str:

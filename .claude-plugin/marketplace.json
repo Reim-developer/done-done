@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
+  "name": "done-done",
+  "owner": {
+    "name": "Reim-developer",
+    "url": "https://github.com/Reim-developer"
+  },
+  "metadata": {
+    "description": "Stop coding agents from lying about done. A single skill that forces real verification before the word done, or an honest BLOCKED report.",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "done-done",
+      "source": "./",
+      "description": "Hard Definition-of-Done gate: detect the project's real verification commands, run them, show the output, then emit DONE with evidence or an honest BLOCKED report."
+    }
+  ]
+}

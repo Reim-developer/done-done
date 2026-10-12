@@ -1,0 +1,21 @@
+{
+  "name": "done-done",
+  "displayName": "done-done",
+  "description": "Hard Definition-of-Done gate: detect the project's real verification commands, run them, show the output, then emit DONE with evidence or an honest BLOCKED report.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Reim-developer",
+    "url": "https://github.com/Reim-developer"
+  },
+  "homepage": "https://github.com/Reim-developer/done-done",
+  "repository": "https://github.com/Reim-developer/done-done",
+  "license": "MIT",
+  "keywords": [
+    "agent-skills",
+    "cursor",
+    "coding-agent",
+    "verification",
+    "definition-of-done"
+  ],
+  "skills": "./skills/"
+}

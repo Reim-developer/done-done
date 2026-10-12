@@ -58,8 +58,16 @@ def _banned_phrases(text: str) -> bool:
 
 
 def _bounded_loop(text: str) -> bool:
-    """Fix loop must be bounded (no infinite thrash) -- '3 attempts'."""
-    return "3 attempts" in text or "3 failed attempts" in text
+    """Fix loop must be bounded (no infinite thrash) -- '3 attempts'.
+
+    Also reject any unbounded-retry wording anywhere in the skill. The bound is
+    stated redundantly, so changing only one instance would otherwise slip
+    through; a stray 'unlimited' / 'until it passes' now fails the contract.
+    """
+    has_bound = "3 attempts" in text or "3 failed attempts" in text
+    unbounded = ["unlimited", "until it passes", "keep retrying", "indefinitely"]
+    has_unbounded = any(u in text.lower() for u in unbounded)
+    return has_bound and not has_unbounded
 
 
 def _reference_link(text: str) -> bool:

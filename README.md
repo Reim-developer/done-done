@@ -114,6 +114,34 @@ cp -r skills/done-done ~/.claude/skills/
 cp -r skills/done-done .claude/skills/
 ```
 
+### Codex (plugin)
+
+Codex ships a native plugin manifest at `.codex-plugin/plugin.json` (the
+official format), and reads this repo's `.claude-plugin/marketplace.json` as a
+legacy-compatible marketplace. Install with the Codex CLI:
+
+```bash
+codex plugin marketplace add Reim-developer/done-done
+codex plugin add done-done@done-done
+```
+
+Or skip the plugin route entirely and copy the skill into the repo-scoped dir
+(`.agents/skills/`) or your user dir (`~/.agents/skills/`).
+
+### Cursor (plugin)
+
+Cursor ships a manifest at `.cursor-plugin/plugin.json` (the same format it
+shares with other harnesses). The simplest reliable path in Cursor is the
+universal installer above (`npx skills add`), or a manual copy into Cursor's
+skills directory. I have not verified a Cursor-specific plugin command, so I am
+not going to invent one here.
+
+### OpenCode
+
+OpenCode reads the Agent Skills standard directly from `skills/` — no plugin
+manifest needed. Use `npx skills add` or copy the folder into
+`~/.config/opencode/skills/`.
+
 ### Manual (any Agent-Skills-compatible agent)
 
 Copy the `skills/done-done/` folder — `SKILL.md` plus its `references/` — into
@@ -191,12 +219,23 @@ done-done/
 │       └── references/
 │           └── verification.md       <- per-language "how to detect checks"
 ├── .claude-plugin/
-│   └── plugin.json                   <- Claude Code plugin manifest
+│   ├── plugin.json                   <- Claude Code plugin manifest
+│   └── marketplace.json              <- makes this repo its own marketplace
+├── .codex-plugin/
+│   └── plugin.json                   <- Codex plugin manifest (official format)
+├── .cursor-plugin/
+│   └── plugin.json                   <- Cursor plugin manifest
 ├── .github/
 │   └── workflows/
-│       └── ci.yml                    <- lint + skill validation
+│       └── ci.yml                    <- contract + packaging + typecheck
 ├── tests/
-│   └── validate.py                   <- runs the same checks as CI
+│   ├── validate.py                   <- packaging + manifest validation
+│   └── test_contract.py              <- regression guard on the skill's promises
+├── evals/
+│   ├── evals.json                    <- behavioral eval cases + assertions
+│   ├── fixtures/                     <- green / red / nocheck (runnable)
+│   └── README.md                     <- how to run the eval, honestly
+├── pyrightconfig.json                <- strict typecheck for the test harness
 ├── AGENTS.md
 ├── CHANGELOG.md
 ├── CODE_OF_CONDUCT.md
